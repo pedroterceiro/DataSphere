@@ -17,10 +17,14 @@ provider "aws" {
   region = "us-east-1"
 }
 
-module "network" {
-  source = "modules/networking/vpc"
+module "vpc" {
+  source = "./modules/networking/vpc"
 }
 
-module "security" {
-  source = "modules/security/kms"
+module "kms" {
+  source = "./modules/security/kms"
+}
+
+module "iam" {
+  source = "./modules/security/iam"
 }
