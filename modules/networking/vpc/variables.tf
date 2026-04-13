@@ -1,29 +1,21 @@
-variable "subnet_cidrs" {
-  type    = list(string)
-  description = "Private and Public subnets CIDR"
-  default = ["192.168.0.0/20", "192.168.16.0/20", "192.168.32.0/20", "192.168.48.0/20", "192.168.64.0/20", "192.168.80.0/20"]
-}
-
-variable "public_subnet_az" {
-  type = map(number)
-
-  description = "Availability Zones for public subnets"
+variable "public_subnet_cidrs" {
+  type        = map(number)
+  description = "Public subnets CIDR"
 
   default = {
-    "us-east-1a" = 1
-    "us-east-1b" = 2
-    "us-east-1c" = 3
+    "192.168.0.0/20"  = 0
+    "192.168.16.0/20" = 1
+    "192.168.32.0/20" = 2
   }
 }
 
-variable "private_subnet_az" {
-  type = map(number)
-
-  description = "Availability Zones for private subnets"
+variable "private_subnet_cidrs" {
+  type        = map(number)
+  description = "Private subnets CIDR"
 
   default = {
-    "us-east-1a" = 1
-    "us-east-1b" = 2
-    "us-east-1c" = 3
+    "192.168.48.0/20" = 0
+    "192.168.64.0/20" = 1
+    "192.168.80.0/20" = 2
   }
 }
