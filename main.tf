@@ -6,15 +6,11 @@ terraform {
     }
   }
   backend "s3" {
-    bucket = "terraform-254670366345-us-east-1-an"
+    bucket = "terraform-860165147234-us-east-1-an"
     key = "terraform.tfstate"
     region = "us-east-1"
     dynamodb_table = "terraform-state"
   }
-}
-
-provider "aws" {
-  region = "us-east-1"
 }
 
 module "vpc" {
@@ -27,4 +23,10 @@ module "kms" {
 
 module "iam" {
   source = "./modules/security/iam"
+}
+
+module "eks" {
+  source = "./modules/compute/eks"
+  eks_cluster_role = module.iam.eks_cluster_role
+  private_subnets = module.vpc.private_subnets
 }
