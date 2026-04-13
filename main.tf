@@ -34,9 +34,6 @@ module "vpc" {
 
 module "kms" {
   source = "./modules/security/kms"
-
-  project_name = var.project_name
-  environment  = var.environment
 }
 
 module "iam_eks_roles" {
