@@ -107,9 +107,13 @@ photo
       }
       ```
       The following policies managed by AWS are used in this role:\
+      \
       EBSCSIDriverPolicy: ```arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy```\
+      \
       ElasticFileSystemUtils: ```arn:aws:iam::aws:policy/AmazonElasticFileSystemsUtils```\
+      \
       S3FilesCSIDriverPolicy: ```arn:aws:iam::aws:policy/service-role/AmazonS3FilesCSIDriverPolicy```\
+      \
       S3ReadOnlyAccess: ```arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess```
 
 
