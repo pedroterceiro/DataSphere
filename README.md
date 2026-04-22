@@ -11,7 +11,7 @@ Build an AWS infrastructure using Terraform. Used for training and learning of b
 
 # Project Structure
 ```
-. DataSphere
+DataSphere
 ├── main.tf # Main terraform file, contains global configurations
 ├── modules # Stores AWS modules
 │   ├── compute # Stores modules related to computing
@@ -46,6 +46,21 @@ photo
 ## Compute
 
 ## Networking
+- VPC
+  1x VPC using a /16 CIDR block
+  - Subnets
+    4x subnets using a /20 CIDR block
+    - 2x private subnets
+    - 2x public subnets
+  - Route Tables
+    3x private route tables with 0.0.0.0 destination pointing to a zonal NAT Gateway
+    1x public route table with 0.0.0.0 destionation pointing to a Internet Gateway
+  - Internet Gateway
+    1x Internet Gateway
+  - NAT Gateway
+    3x Zonal NAT Gateway
+  - Elastic IP Addresses 
+    3x Elastic IP Addresses used for NAT Gateways
 
 ## Security
 
