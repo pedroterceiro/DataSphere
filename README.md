@@ -87,35 +87,62 @@ photo
 ## Security
 - IAM
   - 4x IAM Roles
-  - CSI Controller Role
-    - A role attached to CSI addons, it gives the necessary permissions to make the environment work properly, contains the following trust policy:
+    - CSI Controller Role
+      - Attached to CSI addons, it gives the necessary permissions to make the environment work properly, contains the following trust policy:
+        ```json
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole",
+                "sts:TagSession"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "pods.eks.amazonaws.com"
+              }
+            }
+          ]
+        }
+        ```
+        The following policies managed by AWS are used in this role:\
+        \
+        EBSCSIDriverPolicy: ```arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy```\
+        \
+        ElasticFileSystemUtils: ```arn:aws:iam::aws:policy/AmazonElasticFileSystemsUtils```\
+        \
+        S3FilesCSIDriverPolicy: ```arn:aws:iam::aws:policy/service-role/AmazonS3FilesCSIDriverPolicy```\
+        \
+        S3ReadOnlyAccess: ```arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess```
+  
+    - EKS Node Group Role
+      - Attached to EKS Node Groups, it gives the necessary permissions to make the environment work properly, contains the following trust policy:
       ```json
       {
         "Version": "2012-10-17",
         "Statement": [
           {
-            "Action": [
-              "sts:AssumeRole",
-              "sts:TagSession"
-            ],
             "Effect": "Allow",
             "Principal": {
-              "Service": "pods.eks.amazonaws.com"
-            }
+              "Service": "ec2.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
           }
         ]
       }
       ```
       The following policies managed by AWS are used in this role:\
       \
-      EBSCSIDriverPolicy: ```arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy```\
+      EC2ContainerRegistryReadOnly: ```arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly```\
       \
-      ElasticFileSystemUtils: ```arn:aws:iam::aws:policy/AmazonElasticFileSystemsUtils```\
+      EKS_CNI_Policy: ```arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy```\
       \
-      S3FilesCSIDriverPolicy: ```arn:aws:iam::aws:policy/service-role/AmazonS3FilesCSIDriverPolicy```\
+      EKSWorkerNodePolicy: ```arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy```\
       \
-      S3ReadOnlyAccess: ```arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess```
-
+      ElasticContainerRegistryPublicReadOnly: ```arn:aws:iam::aws:policy/AmazonElasticContainerRegistryPublicReadOnly```
+          
+        
 
 # Deploy
 Before deploying, validate your configuration first.
