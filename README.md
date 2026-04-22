@@ -1,10 +1,8 @@
-# DataSphere: 
+# DataSphere: Learning EKS and CSI Driver
 Build an AWS infrastructure using Terraform. Used for training and learning of best practices.
 
 # Prerequisites
-Terraform v1.14.9 or greater
-
-# Services
+- Terraform v1.14.9 or greater
 - AWS
   - KMS
   - IAM
@@ -41,7 +39,6 @@ Terraform v1.14.9 or greater
 ├── TASK.md # Task that originated DataSphere
 └── variables.tf # Global Variables
 ```
-
 # Infrastructure Diagram
 photo
 
