@@ -6,21 +6,51 @@ terraform {
     }
   }
   backend "s3" {
-    bucket = "terraform-254670366345-us-east-1-an"
-    key = "terraform.tfstate"
-    region = "us-east-1"
+    bucket         = "terraform-860165147234-us-east-1-an"
+    key            = "terraform.tfstate"
+    region         = "us-east-1"
     dynamodb_table = "terraform-state"
   }
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = var.aws_region
+
+  default_tags {
+    tags = {
+      Project     = "DataSphere"
+      Environment = var.environment
+      ManagedBy   = "Terraform"
+    }
+  }
 }
 
-module "network" {
-  source = "modules/networking/vpc"
+module "vpc" {
+  source = "./modules/networking/vpc"
+
+  project_name = var.project_name
+  environment  = var.environment
 }
 
-module "security" {
-  source = "modules/security/kms"
+module "kms" {
+  source = "./modules/security/kms"
+}
+
+module "iam_eks_roles" {
+  source = "./modules/security/iam"
+
+  project_name = var.project_name
+  environment  = var.environment
+}
+
+module "eks_cluster" {
+  source = "./modules/compute/eks"
+
+  project_name              = var.project_name
+  environment               = var.environment
+  cluster_role_arn          = module.iam_eks_roles.cluster_role_arn
+  node_group_role_arn       = module.iam_eks_roles.node_group_role_arn
+  auto_node_role_arn        = module.iam_eks_roles.auto_node_role_arn
+  csi_controller_role_arn   = module.iam_eks_roles.csi_controller_role_arn
+  private_subnets           = module.vpc.private_subnets
 }
