@@ -40,7 +40,7 @@ DataSphere
 └── variables.tf # Global Variables
 ```
 # Infrastructure Diagram
-photo
+![DataSphere Infrastructure](./datasphere-infrastructure-diagram.png)
 
 # Infrastructure Description
 ## Compute
