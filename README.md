@@ -86,9 +86,9 @@ photo
 
 ## Security
 - IAM
-  - 4x IAM Roles
+  - 3x IAM Roles
     - CSI Controller Role
-      - Attached to CSI addons, it gives the necessary permissions to make the environment work properly, contains the following trust policy:
+      - Attached to CSI addons, contains the following trust policy:
         ```json
         {
           "Version": "2012-10-17",
@@ -117,33 +117,59 @@ photo
         S3ReadOnlyAccess: ```arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess```
   
     - EKS Node Group Role
-      - Attached to EKS Node Groups, it gives the necessary permissions to make the environment work properly, contains the following trust policy:
-      ```json
-      {
-        "Version": "2012-10-17",
-        "Statement": [
-          {
-            "Effect": "Allow",
-            "Principal": {
-              "Service": "ec2.amazonaws.com"
-            },
-            "Action": "sts:AssumeRole"
-          }
-        ]
-      }
-      ```
-      The following policies managed by AWS are used in this role:\
-      \
-      EC2ContainerRegistryReadOnly: ```arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly```\
-      \
-      EKS_CNI_Policy: ```arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy```\
-      \
-      EKSWorkerNodePolicy: ```arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy```\
-      \
-      ElasticContainerRegistryPublicReadOnly: ```arn:aws:iam::aws:policy/AmazonElasticContainerRegistryPublicReadOnly```
-          
-        
+      - Attached to EKS Node Groups, contains the following trust policy:
+        ```json
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+        ```
+        The following policies managed by AWS are used in this role:\
+        \
+        EC2ContainerRegistryReadOnly: ```arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly```\
+        \
+        EKS_CNI_Policy: ```arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy```\
+        \
+        EKSWorkerNodePolicy: ```arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy```\
+        \
+        ElasticContainerRegistryPublicReadOnly: ```arn:aws:iam::aws:policy/AmazonElasticContainerRegistryPublicReadOnly```
 
+    - EKS Cluster Role
+      - Attached to EKS cluster, contains the following trust policy:
+        ```json
+              {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "eks.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+        ```
+        The following policies managed by AWS are used in this role:\
+        \
+      AmazonEKSNetworkingPolicy: ```arn:aws:iam::aws:policy/AmazonEKSNetworkingPolicy```\
+      \
+      AmazonEKSLoadBalancingPolicy: ```arn:aws:iam::aws:policy/AmazonEKSLoadBalancingPolicy```\
+      \
+      AmazonEKSComputePolicy: ```arn:aws:iam::aws:policy/AmazonEKSComputePolicy```\
+      \
+      AmazonEKSClusterPolicy: ```arn:aws:iam::aws:policy/AmazonEKSClusterPolicy```\
+      \
+      AmazonEKSBlockStoragePolicy: ```arn:aws:iam::aws:policy/AmazonEKSBlockStoragePolicy```
+          
 # Deploy
 Before deploying, validate your configuration first.
 ```bash
