@@ -1,13 +1,18 @@
 # DataSphere: Learning EKS and CSI Driver
-Build an AWS infrastructure using Terraform. Used for training and learning best practices.
+A hands-on Terraform project for learning AWS EKS and container storage integration.
+
+This project deploys a multi-AZ EKS cluster with EBS and EFS CSI drivers, demonstrating production-ready patterns for networking, security, and persistent storage in Kubernetes.
 
 # Prerequisites
-- Terraform v1.14.9 or greater
-- AWS
-  - KMS
-  - IAM
-  - VPC
-  - EKS
+- [Terraform](https://www.terraform.io/downloads) v1.14.9 or greater
+- [AWS CLI](https://aws.amazon.com/cli/) installed and configured with credentials
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) installed for cluster management
+- AWS account with permissions to create:
+  - VPC, Subnets, NAT Gateways, Internet Gateways
+  - EKS clusters and node groups
+  - IAM roles and policies
+  - Elastic IPs
+- S3 bucket and DynamoDB table for Terraform state backend (see Configuration below)
 
 # Project Structure
 ```
@@ -33,7 +38,7 @@ DataSphere
 │           ├── main.tf
 │           ├── output.tf
 │           └── variables.tf
-├── output.tf # Returns mandatory global variables
+├── output.tf # Outputs mandatory global variables
 ├── pyproject.toml
 ├── README.md # DataSphere's Documentation
 ├── TASK.md # Task that originated DataSphere
@@ -86,9 +91,9 @@ DataSphere
 
 ## Security
 - IAM
-  - 3x IAM Roles
+  - 4x IAM Roles
     - CSI Controller Role
-      - Attached to CSI addons, contains the following trust policy:
+      - Attached to CSI addons. Contains the following trust policy:
         ```json
         {
           "Version": "2012-10-17",
@@ -106,18 +111,14 @@ DataSphere
           ]
         }
         ```
-        The following policies managed by AWS are used in this role:\
-        \
-        EBSCSIDriverPolicy: ```arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy```\
-        \
-        ElasticFileSystemUtils: ```arn:aws:iam::aws:policy/AmazonElasticFileSystemsUtils```\
-        \
-        S3FilesCSIDriverPolicy: ```arn:aws:iam::aws:policy/service-role/AmazonS3FilesCSIDriverPolicy```\
-        \
-        S3ReadOnlyAccess: ```arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess```
+      - AWS managed policies attached to this role:
+        - AmazonEBSCSIDriverPolicy: `arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy`
+        - AmazonElasticFileSystemsUtils: `arn:aws:iam::aws:policy/AmazonElasticFileSystemsUtils`
+        - AmazonS3FilesCSIDriverPolicy: `arn:aws:iam::aws:policy/service-role/AmazonS3FilesCSIDriverPolicy`
+        - AmazonS3ReadOnlyAccess: `arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess`
   
     - EKS Node Group Role
-      - Attached to EKS Node Groups, contains the following trust policy:
+      - Attached to EKS Node Groups. Contains the following trust policy:
         ```json
         {
           "Version": "2012-10-17",
@@ -132,18 +133,14 @@ DataSphere
           ]
         }
         ```
-        The following policies managed by AWS are used in this role:\
-        \
-        EC2ContainerRegistryReadOnly: ```arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly```\
-        \
-        EKS_CNI_Policy: ```arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy```\
-        \
-        EKSWorkerNodePolicy: ```arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy```\
-        \
-        ElasticContainerRegistryPublicReadOnly: ```arn:aws:iam::aws:policy/AmazonElasticContainerRegistryPublicReadOnly```
+      - AWS managed policies attached to this role:
+        - AmazonEC2ContainerRegistryReadOnly: `arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly`
+        - AmazonEKS_CNI_Policy: `arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy`
+        - AmazonEKSWorkerNodePolicy: `arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy`
+        - AmazonElasticContainerRegistryPublicReadOnly: `arn:aws:iam::aws:policy/AmazonElasticContainerRegistryPublicReadOnly`
 
     - EKS Cluster Role
-      - Attached to EKS cluster, contains the following trust policy:
+      - Attached to EKS cluster. Contains the following trust policy:
         ```json
               {
           "Version": "2012-10-17",
@@ -158,28 +155,123 @@ DataSphere
           ]
         }
         ```
-        The following policies managed by AWS are used in this role:\
-        \
-      AmazonEKSNetworkingPolicy: ```arn:aws:iam::aws:policy/AmazonEKSNetworkingPolicy```\
-      \
-      AmazonEKSLoadBalancingPolicy: ```arn:aws:iam::aws:policy/AmazonEKSLoadBalancingPolicy```\
-      \
-      AmazonEKSComputePolicy: ```arn:aws:iam::aws:policy/AmazonEKSComputePolicy```\
-      \
-      AmazonEKSClusterPolicy: ```arn:aws:iam::aws:policy/AmazonEKSClusterPolicy```\
-      \
-      AmazonEKSBlockStoragePolicy: ```arn:aws:iam::aws:policy/AmazonEKSBlockStoragePolicy```
-          
+      - AWS managed policies attached to this role:
+        - AmazonEKSNetworkingPolicy: `arn:aws:iam::aws:policy/AmazonEKSNetworkingPolicy`
+        - AmazonEKSLoadBalancingPolicy: `arn:aws:iam::aws:policy/AmazonEKSLoadBalancingPolicy`
+        - AmazonEKSComputePolicy: `arn:aws:iam::aws:policy/AmazonEKSComputePolicy`
+        - AmazonEKSClusterPolicy: `arn:aws:iam::aws:policy/AmazonEKSClusterPolicy`
+        - AmazonEKSBlockStoragePolicy: `arn:aws:iam::aws:policy/AmazonEKSBlockStoragePolicy`
+
+    - EKS Auto Node Role
+      - Attached to auto-scaling nodes. Contains the following trust policy:
+        ```json
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+        ```
+      - AWS managed policies attached to this role:
+        - AmazonEC2ContainerRegistryPullOnly: `arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly`
+        - AmazonEKSWorkerNodeMinimalPolicy: `arn:aws:iam::aws:policy/AmazonEKSWorkerNodeMinimalPolicy`
+        - AmazonElasticContainerRegistryPublicReadOnly: `arn:aws:iam::aws:policy/AmazonElasticContainerRegistryPublicReadOnly`
+
 # Deploy
-Before deploying, validate your configuration first.
+## Configuration
+Before deploying, configure the Terraform backend in `main.tf`:
+
+```hcl
+backend "s3" {
+  bucket         = "your-terraform-state-bucket"  # Replace with your S3 bucket
+  key            = "terraform.tfstate"
+  region         = "us-east-1"
+  dynamodb_table = "your-terraform-lock-table"    # Replace with your DynamoDB table
+}
+```
+
+Optionally, customize variables in `variables.tf` or create a `terraform.tfvars` file:
+```hcl
+aws_region   = "us-east-1"    # Default: us-east-1
+project_name = "datasphere"   # Default: datasphere
+environment  = "dev"          # Default: dev
+```
+
+## Deployment Steps
+Initialize Terraform and download required providers:
+```bash
+terraform init
+```
+
+Validate your configuration:
 ```bash
 terraform validate
 ```
-Plan the changes before applying it.
+
+Plan the changes before applying them:
 ```bash
 terraform plan
 ```
-Apply the changes if the resources meets your requirements.
+
+Apply the changes if the resources meet your requirements:
 ```bash
 terraform apply
 ```
+
+## Post-Deployment
+After successful deployment, configure kubectl to connect to your EKS cluster:
+
+```bash
+aws eks update-kubeconfig --region us-east-1 --name datasphere-eks-cluster
+```
+
+Verify the cluster is accessible:
+```bash
+kubectl get nodes
+```
+
+Check that CSI drivers are running:
+```bash
+kubectl get pods -n kube-system | grep csi
+```
+
+You should see pods for:
+- `ebs-csi-controller`
+- `ebs-csi-node`
+- `efs-csi-controller`
+- `efs-csi-node`
+
+Test EBS CSI driver with a sample PersistentVolumeClaim:
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ebs-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3
+  resources:
+    requests:
+      storage: 4Gi
+```
+
+Apply and verify:
+```bash
+kubectl apply -f pvc.yaml
+kubectl get pvc ebs-claim
+```
+
+## Cleanup
+To destroy all resources:
+```bash
+terraform destroy
+```
+
+**Warning:** Ensure all PersistentVolumes created by the CSI drivers are deleted before running `terraform destroy`, otherwise EBS volumes may remain orphaned.
